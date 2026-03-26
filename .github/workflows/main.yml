@@ -27,11 +27,18 @@ jobs:
             mingw-w64-ucrt-x86_64-freetype
             mingw-w64-ucrt-x86_64-openal
             mingw-w64-ucrt-x86_64-jsoncpp
+            mingw-w64-ucrt-x86_64-gmp
       - name: Build HeroCraft 1.0
         shell: msys2 {0}
         run: |
           mkdir build && cd build
-          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DENABLE_CURSES=0
+          cmake .. -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_GETTEXT=0 \
+            -DENABLE_CURSES=0 \
+            -DBUILD_UNITTESTS=0 \
+            -DIRRLICHT_LIBRARY="" \
+            -DIRRLICHT_INCLUDE_DIR=""
           ninja
       - name: Upload HeroCraft.exe
         uses: actions/upload-artifact@v4
