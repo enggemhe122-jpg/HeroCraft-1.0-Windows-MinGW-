@@ -1,4 +1,4 @@
-name: HeroCraft 1.0 Builder
+name: HeroCraft 1.0 Ultimate Builder
 on: [push]
 
 jobs:
@@ -6,42 +6,19 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          install: >-
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-luajit
-            mingw-w64-ucrt-x86_64-zstd
-            mingw-w64-ucrt-x86_64-libvorbis
-            mingw-w64-ucrt-x86_64-libogg
-            mingw-w64-ucrt-x86_64-sqlite3
-            mingw-w64-ucrt-x86_64-curl
-            mingw-w64-ucrt-x86_64-zlib
-            mingw-w64-ucrt-x86_64-libjpeg-turbo
-            mingw-w64-ucrt-x86_64-libpng
-            mingw-w64-ucrt-x86_64-freetype
-            mingw-w64-ucrt-x86_64-openal
-            mingw-w64-ucrt-x86_64-jsoncpp
-            mingw-w64-ucrt-x86_64-gmp
-      - name: Build HeroCraft 1.0
-        shell: msys2 {0}
+
+      - name: Setup vcpkg
         run: |
-          mkdir build && cd build
-          cmake .. -G "Ninja" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_GETTEXT=0 \
-            -DENABLE_CURSES=0 \
-            -DBUILD_UNITTESTS=0 \
-            -DIRRLICHT_LIBRARY="" \
-            -DIRRLICHT_INCLUDE_DIR=""
-          ninja
-      - name: Upload HeroCraft.exe
+          git clone https://github.com
+          .\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Install Dependencies & Build
+        run: |
+          # هذا الأمر سيقوم بتحميل كل المكتبات وبناء اللعبة في خطوة واحدة قوية
+          .\vcpkg\vcpkg install luanti:x64-windows
+
+      - name: Upload HeroCraft EXE
         uses: actions/upload-artifact@v4
         with:
-          name: HeroCraft-1.0-Windows
-          path: build/bin/
+          name: HeroCraft-1.0-Final
+          path: vcpkg/installed/x64-windows/bin/
