@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=HeroCraft
+GenericName=HeroCraft
+Comment=Block-based multiplayer game platform
+Exec=herocraft
+Icon=herocraft
+Terminal=false
+# Note: don't add PrefersNonDefaultGPU here, see #16095
+Type=Application
+Categories=Game;Simulation;
+StartupNotify=false
+StartupWMClass=herocraft
+Keywords=sandbox;world;mining;crafting;blocks;nodes;multiplayer;roleplaying;herocraft;
+X-Purism-FormFactor=Mobile;Workstation
