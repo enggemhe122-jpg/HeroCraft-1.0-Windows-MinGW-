@@ -1,0 +1,42 @@
+name: HeroCraft 1.0 Builder
+on: [push]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-irrlichtmt
+            mingw-w64-ucrt-x86_64-luajit
+            mingw-w64-ucrt-x86_64-zstd
+            mingw-w64-ucrt-x86_64-libvorbis
+            mingw-w64-ucrt-x86_64-libogg
+            mingw-w64-ucrt-x86_64-sqlite3
+            mingw-w64-ucrt-x86_64-curl
+            
+      - name: Build HeroCraft 1.0
+        shell: msys2 {0}
+        run: |
+          mkdir build && cd build
+          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+          ninja
+          
+      - name: Upload HeroCraft.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: HeroCraft-1.0-Windows
+          path: |
+            build/bin/
+            games/
+            builtin/
+            textures/
