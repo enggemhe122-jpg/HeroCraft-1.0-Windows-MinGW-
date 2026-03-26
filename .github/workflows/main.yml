@@ -1,4 +1,4 @@
-name: HeroCraft 1.0 Final Build
+name: HeroCraft 1.0 Final Sovereign Build
 on: [push]
 
 jobs:
@@ -6,7 +6,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -26,13 +25,21 @@ jobs:
             mingw-w64-ucrt-x86_64-libpng
             mingw-w64-ucrt-x86_64-libjpeg-turbo
             mingw-w64-ucrt-x86_64-freetype
+            mingw-w64-ucrt-x86_64-openal
+            mingw-w64-ucrt-x86_64-jsoncpp
+            mingw-w64-ucrt-x86_64-gmp
 
       - name: Build HeroCraft 1.0
         shell: msys2 {0}
         run: |
           mkdir build && cd build
-          # استخدام المكتبات الداخلية للمحرك لتجاوز خطأ المجلدات المفقودة
-          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DENABLE_CURSES=0
+          # تفعيل خاصية جلب المكتبات المفقودة تلقائياً
+          cmake .. -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_GETTEXT=0 \
+            -DENABLE_CURSES=0 \
+            -DRUN_IN_PLACE=1 \
+            -DENABLE_SYSTEM_GMP=1
           ninja
 
       - name: Upload HeroCraft EXE
