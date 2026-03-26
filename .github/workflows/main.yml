@@ -16,18 +16,22 @@ jobs:
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-irrlichtmt
             mingw-w64-ucrt-x86_64-luajit
             mingw-w64-ucrt-x86_64-zstd
             mingw-w64-ucrt-x86_64-libvorbis
             mingw-w64-ucrt-x86_64-libogg
             mingw-w64-ucrt-x86_64-sqlite3
             mingw-w64-ucrt-x86_64-curl
+            mingw-w64-ucrt-x86_64-zlib
+            mingw-w64-ucrt-x86_64-libpng
+            mingw-w64-ucrt-x86_64-libjpeg-turbo
+            mingw-w64-ucrt-x86_64-freetype
 
       - name: Build HeroCraft 1.0
         shell: msys2 {0}
         run: |
           mkdir build && cd build
+          # استخدام المكتبات الداخلية للمحرك لتجاوز خطأ المجلدات المفقودة
           cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DENABLE_CURSES=0
           ninja
 
