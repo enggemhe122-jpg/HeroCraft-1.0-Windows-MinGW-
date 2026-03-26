@@ -28,18 +28,19 @@ jobs:
             mingw-w64-ucrt-x86_64-openal
             mingw-w64-ucrt-x86_64-jsoncpp
             mingw-w64-ucrt-x86_64-gmp
+            mingw-w64-ucrt-x86_64-SDL2
 
       - name: Build HeroCraft 1.0
         shell: msys2 {0}
         run: |
           mkdir build && cd build
-          # تفعيل خاصية جلب المكتبات المفقودة تلقائياً
           cmake .. -G "Ninja" \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_GETTEXT=0 \
             -DENABLE_CURSES=0 \
             -DRUN_IN_PLACE=1 \
-            -DENABLE_SYSTEM_GMP=1
+            -DENABLE_SYSTEM_GMP=1 \
+            -DBUILD_UNITTESTS=0
           ninja
 
       - name: Upload HeroCraft EXE
