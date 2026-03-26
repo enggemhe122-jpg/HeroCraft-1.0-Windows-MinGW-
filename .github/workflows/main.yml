@@ -7,15 +7,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Build Environment
+      - name: Install Build Tools & Libraries
         run: |
-          choco install cmake ninja mingw -y
+          # تحميل كل المكتبات الناقصة دفعة واحدة
+          choco install cmake ninja mingw zlib-ng curl sqlite openssl -y
 
       - name: Build HeroCraft 1.0
         shell: cmd
         run: |
           mkdir build && cd build
-          cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DENABLE_CURSES=0
+          # إخبار CMake بمكان المكتبات لضمان عدم حدوث خطأ ZLIB مجدداً
+          cmake .. -G "MinGW Makefiles" ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DENABLE_GETTEXT=0 ^
+            -DENABLE_CURSES=0 ^
+            -DZLIB_INCLUDE_DIR="C:/ProgramData/chocolatey/lib/zlib-ng/include" ^
+            -DZLIB_LIBRARY="C:/ProgramData/chocolatey/lib/zlib-ng/lib/zlib.lib"
           mingw32-make -j2
 
       - name: Upload HeroCraft EXE
