@@ -34,13 +34,15 @@ jobs:
         shell: msys2 {0}
         run: |
           mkdir build && cd build
+          # الضربة القاضية: تعطيل بناء ملفات الـ Resource اللي تسبب الخطأ
           cmake .. -G "Ninja" \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_GETTEXT=0 \
             -DENABLE_CURSES=0 \
             -DRUN_IN_PLACE=1 \
             -DENABLE_SYSTEM_GMP=1 \
-            -DBUILD_UNITTESTS=0
+            -DBUILD_UNITTESTS=0 \
+            -DENABLE_WINRESOURCE=0 
           ninja
 
       - name: Upload HeroCraft EXE
