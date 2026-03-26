@@ -1,4 +1,4 @@
-name: HeroCraft 1.0 Ultimate Builder
+name: HeroCraft 1.0 Final Build
 on: [push]
 
 jobs:
@@ -7,18 +7,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup vcpkg
+      - name: Setup Build Environment
         run: |
-          git clone https://github.com
-          .\vcpkg\bootstrap-vcpkg.bat
+          choco install cmake ninja mingw -y
 
-      - name: Install Dependencies & Build
+      - name: Build HeroCraft 1.0
+        shell: cmd
         run: |
-          # هذا الأمر سيقوم بتحميل كل المكتبات وبناء اللعبة في خطوة واحدة قوية
-          .\vcpkg\vcpkg install luanti:x64-windows
+          mkdir build && cd build
+          cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DENABLE_CURSES=0
+          mingw32-make -j2
 
       - name: Upload HeroCraft EXE
         uses: actions/upload-artifact@v4
         with:
-          name: HeroCraft-1.0-Final
-          path: vcpkg/installed/x64-windows/bin/
+          name: HeroCraft-1.0-Windows
+          path: bin/
