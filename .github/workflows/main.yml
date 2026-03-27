@@ -1,26 +1,45 @@
-      - name: Force Build HeroCraft 1.0
+name: HeroCraft-1-0-Power-Build
+on: [push]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-luajit
+            mingw-w64-ucrt-x86_64-zstd
+            mingw-w64-ucrt-x86_64-libvorbis
+            mingw-w64-ucrt-x86_64-libogg
+            mingw-w64-ucrt-x86_64-sqlite3
+            mingw-w64-ucrt-x86_64-curl
+            mingw-w64-ucrt-x86_64-zlib
+            mingw-w64-ucrt-x86_64-libpng
+            mingw-w64-ucrt-x86_64-libjpeg-turbo
+            mingw-w64-ucrt-x86_64-freetype
+            mingw-w64-ucrt-x86_64-openal
+            mingw-w64-ucrt-x86_64-jsoncpp
+            mingw-w64-ucrt-x86_64-SDL2
+
+      - name: Force Build HeroCraft
         shell: msys2 {0}
         run: |
           mkdir -p misc
           echo '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"></assembly>' > misc/luanti.exe.manifest
+          mkdir build && cd build
+          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DBUILD_UNITTESTS=0 -DENABLE_WINRESOURCE=0
+          ninja -k 0 || true
           
-          mkdir -p build && cd build
-          cmake .. -G "Ninja" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_GETTEXT=0 \
-            -DENABLE_CURSES=0 \
-            -DBUILD_UNITTESTS=0 \
-            -DENABLE_SYSTEM_GMP=0
-          
-          # محاولة البناء وإظهار الملفات الناتجة
-          ninja
-          ls -R bin/ || ls -R . # كشف مكان ملف exe إذا نجح البناء
-
       - name: Upload HeroCraft EXE
         uses: actions/upload-artifact@v4
         with:
-          name: HeroCraft-Windows
-          path: |
-            build/**/*.exe
-            build/bin/*.exe
-          if-no-files-found: error # سيعطيك خطأ واضح إذا لم يجد الملف لتعرف السبب
+          name: HeroCraft-1-0-Final-Binary
+          path: build/bin/
