@@ -1,17 +1,19 @@
 name: HeroCraft-1-0-Power-Build
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
           install: >-
+            git
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
@@ -28,18 +30,44 @@ jobs:
             mingw-w64-ucrt-x86_64-openal
             mingw-w64-ucrt-x86_64-jsoncpp
             mingw-w64-ucrt-x86_64-SDL2
+            mingw-w64-ucrt-x86_64-gmp
+
+      - name: Download IrrlichtMt (Fix irrTypes.h)
+        shell: msys2 {0}
+        run: |
+          mkdir -p lib
+          git clone --depth 1 https://github.com/minetest/irrlicht.git lib/irrlichtmt
 
       - name: Force Build HeroCraft
         shell: msys2 {0}
         run: |
           mkdir -p misc
           echo '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"></assembly>' > misc/luanti.exe.manifest
-          mkdir build && cd build
-          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DBUILD_UNITTESTS=0 -DENABLE_WINRESOURCE=0
-          ninja -k 0 || true
           
-      - name: Upload HeroCraft EXE
+          mkdir build && cd build
+          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DBUILD_UNITTESTS=0 -DENABLE_WINRESOURCE=0 -DRUN_IN_PLACE=1
+          
+          ninja
+
+      - name: Package Game & Missing DLLs
+        shell: msys2 {0}
+        run: |
+          mkdir -p HeroCraft-Ready/bin
+          
+          cp build/bin/*.exe HeroCraft-Ready/bin/
+          
+          cp -r builtin HeroCraft-Ready/ || true
+          cp -r client HeroCraft-Ready/ || true
+          cp -r games HeroCraft-Ready/ || true
+          cp -r textures HeroCraft-Ready/ || true
+          cp -r fonts HeroCraft-Ready/ || true
+          
+          for exe in HeroCraft-Ready/bin/*.exe; do
+            ldd "$exe" | grep -i '/ucrt64/bin/' | awk '{print $3}' | xargs -I '{}' cp -n '{}' HeroCraft-Ready/bin/
+          done
+          
+      - name: Upload HeroCraft Playable Game
         uses: actions/upload-artifact@v4
         with:
           name: HeroCraft-1-0-Final-Binary
-          path: build/bin/
+          path: HeroCraft-Ready/
