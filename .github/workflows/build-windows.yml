@@ -13,9 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+
       - name: Install dependencies with vcpkg
         run: |
-          vcpkg install zlib:x64-windows
+          .\vcpkg\vcpkg install zlib:x64-windows opengl:x64-windows
 
       - name: Install MinGW and CMake
         run: |
@@ -35,11 +40,9 @@ jobs:
       - name: Collect files for packaging
         run: |
           mkdir -p release/HeroCraft
-          copy build\HeroCraft.exe release\HeroCraft\ 2>nul || echo "Exe not found yet"
           xcopy textures release\HeroCraft\textures\ /E /I /Y
           xcopy fonts release\HeroCraft\fonts\ /E /I /Y
           xcopy mods release\HeroCraft\mods\ /E /I /Y
-          copy herocraft.conf.example release\HeroCraft\ 2>nul || echo "Config file copied"
 
       - name: Create ZIP package
         run: |
