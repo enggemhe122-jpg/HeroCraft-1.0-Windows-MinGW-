@@ -1,73 +1,62 @@
-name: HeroCraft-1-0-Power-Build
-on: [push, workflow_dispatch]
+name: Build Windows Executable
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
+
+      - name: Install MinGW and CMake
+        run: |
+          choco install mingw cmake -y
+
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Configure project with CMake
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build project
+        run: |
+          cd build
+          cmake --build . --config Release
+
+      - name: Collect files for packaging
+        run: |
+          mkdir -p release/HeroCraft
+          copy build\HeroCraft.exe release\HeroCraft\
+          xcopy textures release\HeroCraft\textures\ /E /I
+          xcopy fonts release\HeroCraft\fonts\ /E /I
+          xcopy mods release\HeroCraft\mods\ /E /I
+          copy herocraft.conf.example release\HeroCraft\
+
+      - name: Create ZIP package
+        run: |
+          cd release
+          powershell -Command "Compress-Archive -Path HeroCraft -DestinationPath HeroCraft-Windows.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          msystem: UCRT64
-          update: true
-          install: >-
-            git
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-luajit
-            mingw-w64-ucrt-x86_64-zstd
-            mingw-w64-ucrt-x86_64-libvorbis
-            mingw-w64-ucrt-x86_64-libogg
-            mingw-w64-ucrt-x86_64-sqlite3
-            mingw-w64-ucrt-x86_64-curl
-            mingw-w64-ucrt-x86_64-zlib
-            mingw-w64-ucrt-x86_64-libpng
-            mingw-w64-ucrt-x86_64-libjpeg-turbo
-            mingw-w64-ucrt-x86_64-freetype
-            mingw-w64-ucrt-x86_64-openal
-            mingw-w64-ucrt-x86_64-jsoncpp
-            mingw-w64-ucrt-x86_64-SDL2
-            mingw-w64-ucrt-x86_64-gmp
+          name: HeroCraft-Windows
+          path: release/HeroCraft-Windows.zip
 
-      - name: Download IrrlichtMt (Fix irrTypes.h)
-        shell: msys2 {0}
-        run: |
-          mkdir -p lib
-          git clone --depth 1 https://github.com/minetest/irrlicht.git lib/irrlichtmt
-
-      - name: Force Build HeroCraft
-        shell: msys2 {0}
-        run: |
-          mkdir -p misc
-          echo '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"></assembly>' > misc/luanti.exe.manifest
-          
-          mkdir build && cd build
-          cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT=0 -DBUILD_UNITTESTS=0 -DENABLE_WINRESOURCE=0 -DRUN_IN_PLACE=1
-          
-          ninja
-
-      - name: Package Game & Missing DLLs
-        shell: msys2 {0}
-        run: |
-          mkdir -p HeroCraft-Ready/bin
-          
-          cp build/bin/*.exe HeroCraft-Ready/bin/
-          
-          cp -r builtin HeroCraft-Ready/ || true
-          cp -r client HeroCraft-Ready/ || true
-          cp -r games HeroCraft-Ready/ || true
-          cp -r textures HeroCraft-Ready/ || true
-          cp -r fonts HeroCraft-Ready/ || true
-          
-          for exe in HeroCraft-Ready/bin/*.exe; do
-            ldd "$exe" | grep -i '/ucrt64/bin/' | awk '{print $3}' | xargs -I '{}' cp -n '{}' HeroCraft-Ready/bin/
-          done
-          
-      - name: Upload HeroCraft Playable Game
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: HeroCraft-1-0-Final-Binary
-          path: HeroCraft-Ready/
+          files: release/HeroCraft-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
